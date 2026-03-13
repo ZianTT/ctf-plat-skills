@@ -55,9 +55,44 @@ python scripts/zerosecone.py submit <challenge_id> <flag>
 - ZEROSECONE_URL: Base URL of the Zerosecone CTF platform (e.g., https://www.aliyunctf.com)
 - ZEROSECONE_TOKEN: Authentication token for API access
 
+## Tool Prerequisites
+
+- For websocket challenge environments, `websocat` is required before interaction.
+- Install by OS:
+  - macOS:
+```zsh
+brew install websocat
+```
+
+or
+
+```zsh
+sudo port install websocat
+```
+
+  - Linux:
+
+Go https://github.com/vi/websocat/releases Download Pre-built Binary and add to PATH
+
+  - Windows 
+
+Go https://github.com/vi/websocat/releases Download Pre-built Binary and add to PATH
+
+- If installation fails (network/repo/permission issues), stop automated installation and ask the user to install manually from:
+```text
+https://github.com/vi/websocat
+```
+- Resume challenge interaction only after `websocat` is available in `PATH`.
+
 ## Decision Points
 - If platform detection script returns no match:
   - stop and report detection failure
+- If challenge environment indicates websocket access:
+  - check `websocat` availability first (`command -v websocat`)
+  - try installing `websocat` automatically when missing
+  - if installation fails, ask user to download/install manually from `https://github.com/vi/websocat`
+  - require `websocat` first to bind ws/wss endpoint to a local TCP port
+  - continue interaction through the local bound port only
 - If detected platform has no mapped script:
   - stop and report unsupported platform
 - If credentials are missing:
@@ -67,6 +102,7 @@ python scripts/zerosecone.py submit <challenge_id> <flag>
 
 ## Completion Checks
 - Platform type is identified by `scripts/detect_platorm.py`
+- For websocket environments, ws/wss endpoint is successfully bound to a local TCP port via `websocat` before exploitation/interaction
 - Required credentials are explicitly collected from the user
 - Correct script path is selected based on platform type
 - Routed command executes and returns parseable output
@@ -87,3 +123,14 @@ Zerosecone with explicit credentials:
 ```bash
 python scripts/zerosecone.py --url <target_url> --token "$ZEROSECONE_TOKEN" <action> [args]
 ```
+
+Websocket environment port binding (required before interaction):
+```bash
+command -v websocat || <install-websocat-by-os>
+
+websocat -b tcp-l:127.0.0.1:<local_port> ws://<target_ws_endpoint>
+# or
+websocat -b tcp-l:127.0.0.1:<local_port> wss://<target_ws_endpoint>
+```
+
+If installation fails, ask user to install manually from `https://github.com/vi/websocat` and rerun the binding command.
