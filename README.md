@@ -2,16 +2,17 @@
 
 CTF AI 自动化的最后一座桥梁，打通CTF平台与AI的通信壁垒
 
-目前支持及计划支持平台：
+## 目前支持及计划支持平台
 
-[*] ZEROSECONE (即阿里云CTF等所用平台，可能非官方命名)
-[*] GZCTF
-[ ] Ret2Shell
-[ ] CTFd
-[ ] 新版 adworld 攻防世界 (XCTF、赛宁网安)
-[ ] i春秋
-[ ] CTFPlus
-[ ] A1CTF
+- [x] ZEROSECONE（即阿里云CTF等所用平台，可能非官方命名）
+- [x] GZCTF
+- [ ] Ret2Shell
+- [ ] CTFd
+- [ ] 新版 adworld 攻防世界（XCTF、赛宁网安）
+- [ ] i春秋
+- [ ] CTFPlus
+- [ ] A1CTF
+
 
 ## 已知问题
 
