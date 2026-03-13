@@ -80,7 +80,6 @@ class GZCTF(CTFPlatform):
         return filename
     
     def start_instance(self, challenge_id):
-        # https://www.tpcup.org/api/game/1/container/20
         instance = self.session.post(f"{self.url}/container/{challenge_id}")
         if instance.status_code != 200:
             print(f"💥 Failed to start instance for challenge {challenge_id}: {instance.status_code} {instance.json()}")

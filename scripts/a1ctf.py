@@ -1,6 +1,7 @@
 import os
 import json
 import argparse
+import time
 
 from common import CTFPlatform
 import requests
@@ -71,6 +72,47 @@ class A1CTF(CTFPlatform):
                 f.write(attachment_data.content)
             print(f"✅ Downloaded attachment to {filepath}")
 
+    def start_instance(self, challenge_id):
+        instance = self.session.post(f"{self.url}/container/{challenge_id}")
+        if instance.status_code != 200:
+            print(f"💥 Failed to start instance for challenge {challenge_id}: {instance.status_code} {instance.json()}")
+            return {}
+        data = instance.json()
+        if data["code"] != 200:
+            print(f"💥 Failed to start instance for challenge {challenge_id}: {data['message']}")
+        time.sleep(1)
+        for i in range(10):
+            instance_status = self.session.get(f"{self.url}/container/{challenge_id}")
+            if instance_status.status_code != 200:
+                print(f"💥 Failed to get instance status for challenge {challenge_id}: {instance_status.status_code} {instance_status.json()}")
+                return {}
+            instance_status = instance_status.json()
+            if instance_status["data"]["container_status"] == "ContainerRunning":
+                print(f"✅ Instance is running")
+                return instance_status['data']
+            time.sleep(1)
+        return data
+    
+    def renew_instance(self, instance_id):
+        instance = self.session.patch(f"{self.url}/container/{instance_id}")
+        if instance.status_code != 200:
+            print(f"💥 Failed to renew instance {instance_id}: {instance.status_code} {instance.json()}")
+            return {}
+        data = instance.json()
+        if data["code"] != 200:
+            print(f"💥 Failed to renew instance {instance_id}: {data['message']}")
+        return data
+
+    def stop_instance(self, instance_id):
+        instance = self.session.delete(f"{self.url}/container/{instance_id}")
+        if instance.status_code != 200:
+            print(f"💥 Failed to stop instance {instance_id}: {instance.status_code} {instance.json()}")
+            return {}
+        data = instance.json()
+        if data["code"] != 200:
+            print(f"💥 Failed to stop instance {instance_id}: {data['message']}")
+        return data
+    
     
     def submit_flag(self, challenge_id, flag):
         submission = self.session.post(f"{self.url}/flag/{challenge_id}", json={"flag": flag})
