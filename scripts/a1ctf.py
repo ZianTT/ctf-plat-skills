@@ -49,6 +49,29 @@ class A1CTF(CTFPlatform):
             return {}
         return challenge.json()['data']
     
+    def download_challenge_attachment(self, challenge_id):
+        challenge = self.fetch_challenge(challenge_id)
+        if challenge == {}:
+            print("💥 Challenge not found, cannot download attachment")
+            return None
+        if challenge["attachments"] == []:
+            print("💥 No attachment for this challenge")
+            return None
+        if not os.path.exists(f"attachments/{self.metadata['title']}/{challenge['challenge_name']}"):
+            os.makedirs(f"attachments/{self.metadata['title']}/{challenge['challenge_name']}")
+        for attachment in challenge["attachments"]:
+            if attachment["attach_type"] == "STATICFILE":
+                url = f"{self.url.split('/api')[0]}/api/file/download/{attachment['attach_hash']}"
+            else:
+                url = attachment["attach_url"]
+            filename = attachment["attach_name"]
+            filepath = f"attachments/{self.metadata['title']}/{challenge['challenge_name']}/{filename}"
+            attachment_data = self.session.get(url)
+            with open(filepath, "wb") as f:
+                f.write(attachment_data.content)
+            print(f"✅ Downloaded attachment to {filepath}")
+
+    
     def submit_flag(self, challenge_id, flag):
         submission = self.session.post(f"{self.url}/flag/{challenge_id}", json={"flag": flag})
         if submission.status_code != 200:
