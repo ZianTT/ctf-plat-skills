@@ -88,8 +88,8 @@ class Zerosecone(CTFPlatform):
 
 def build_parser():
     parser = argparse.ArgumentParser(description="Zerosecone CTF API CLI")
-    parser.add_argument("--url", default=os.environ.get("ZEROSECONE_URL"), help="Platform base URL")
-    parser.add_argument("--token", default=os.environ.get("ZEROSECONE_TOKEN"), help="Auth token (or set ZEROSECONE_TOKEN)")
+    parser.add_argument("--url", "-u",  default=os.environ.get("ZEROSECONE_URL"), help="Platform base URL")
+    parser.add_argument("--token", "-t",  default=os.environ.get("ZEROSECONE_TOKEN"), help="Auth token (or set ZEROSECONE_TOKEN)")
 
     subparsers = parser.add_subparsers(dest="action", required=True)
 

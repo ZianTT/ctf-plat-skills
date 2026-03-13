@@ -4,7 +4,7 @@ import requests
 
 def build_parser():
     parser = argparse.ArgumentParser(description="CTF Platform Detection Script")
-    parser.add_argument("--url", required=True, help="Base URL of the target CTF platform")
+    parser.add_argument("--url", "-u",  required=True, help="Base URL of the target CTF platform")
     return parser.parse_args()
 
 def main():

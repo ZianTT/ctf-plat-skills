@@ -1,6 +1,7 @@
 import os
 import json
 import argparse
+import time
 
 from common import CTFPlatform
 import requests
@@ -114,16 +115,23 @@ class GZCTF(CTFPlatform):
             print(f"💥 Failed to submit flag for challenge {challenge_id}: {submission.status_code} {submission.json()}")
             return {}
         submission_id = submission.json()
-        result = self.session.get(f"{self.url}/challenges/{challenge_id}/status/{submission_id}")
-        if result.status_code != 200:
-            print(f"💥 Failed to get submission result for challenge {challenge_id}: {result.status_code} {result.json()}")
-            return {}
-        return result.json()
+        time.sleep(1)
+        for i in range(10):
+            result = self.session.get(f"{self.url}/challenges/{challenge_id}/status/{submission_id}")
+            if result.status_code != 200:
+                print(f"💥 Failed to get submission result for challenge {challenge_id}: {result.status_code} {result.json()}")
+                return {}
+            result = result.json()
+            if result["data"]["judge_status"] != "JudgeQueueing":
+                return result
+            time.sleep(1)
+        print(f"⚠️ Submission result is still in queue after 10 seconds, please check manually later with submission ID: {submission_id}")
+        return {}
 
 def build_parser():
     parser = argparse.ArgumentParser(description="GZCTF API CLI")
-    parser.add_argument("--url", default=os.environ.get("GZCTF_URL"), help="Platform base URL (e.g. https://gzctf.com/api/game/1)")
-    parser.add_argument("--token", default=os.environ.get("GZCTF_TOKEN"), help="Auth token (or set GZCTF_TOKEN)")
+    parser.add_argument("--url", "-u",  default=os.environ.get("GZCTF_URL"), help="Platform base URL (e.g. https://gzctf.com/api/game/1)")
+    parser.add_argument("--token", "-t",  default=os.environ.get("GZCTF_TOKEN"), help="Auth token (or set GZCTF_TOKEN)")
 
     subparsers = parser.add_subparsers(dest="action", required=True)
 
