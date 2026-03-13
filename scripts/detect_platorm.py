@@ -17,6 +17,18 @@ def main():
             print("Detected: zerosecone")
         elif "GZCTF" in response.content.decode() or "::CTF" in response.content.decode():
             print("Detected: gzctf")
+        elif "Reverier-Xu" in response.content.decode():
+            print("Detected: ret2shell")
+        elif "ctfd" in response.content.decode().lower():
+            print("Detected: ctfd") 
+        elif "/page/mg" in response.content.decode() or "xctf.org.cn" in url:
+            print("Detected: adworld")
+        elif "ichunqiu.com" in url:
+            print("Detected: ichunqiu")
+        elif "ctfplus.cn" in url:
+            print("Detected: ctfplus")
+        elif "GameSwitchContext" in response.content.decode():
+            print("Detected: a1ctf")
         else:
             print("💥 Unable to detect platform type from the provided URL.")
     except requests.RequestException as e:
