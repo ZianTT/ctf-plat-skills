@@ -20,6 +20,7 @@ Produce a reusable automation flow that can:
   - action arguments (`challenge_id`, `instance_id`, `flag`)
 
 ## Script Routing Map
+- `gzctf` -> `python scripts/gzctf.py ...`
 - `zerosecone` -> `python scripts/zerosecone.py ...`
 - More platforms can be added later by creating new scripts in `scripts/` and extending the routing map.
 
@@ -36,12 +37,26 @@ Do not infer platform type from manual HTML inspection, browser checks, ad-hoc H
 3. Save base_url and token (or other credentials) in environment variables or pass as arguments to platform scripts.
 
 4. Route to the matched platform script.
+- If detected platform is `gzctf`, call:
+```bash
+python scripts/gzctf.py list
+```
 - If detected platform is `zerosecone`, call:
 ```bash
 python scripts/zerosecone.py list
 ```
 
 5. Execute user-requested action with routed script.
+```bash
+python scripts/gzctf.py metadata
+python scripts/gzctf.py list
+python scripts/gzctf.py fetch <challenge_id>
+python scripts/gzctf.py download <challenge_id>
+python scripts/gzctf.py start <challenge_id>
+python scripts/gzctf.py renew <instance_id>
+python scripts/gzctf.py stop <instance_id>
+python scripts/gzctf.py submit <challenge_id> <flag>
+```
 ```bash
 python scripts/zerosecone.py fetch <challenge_id>
 python scripts/zerosecone.py download <challenge_id>
@@ -52,6 +67,8 @@ python scripts/zerosecone.py submit <challenge_id> <flag>
 
 ## Environment Variable
 
+- GZCTF_URL: Base URL of the GZCTF platform (e.g. https://target/api/game/1 or https://target/games/1)
+- GZCTF_TOKEN: Authentication token for GZCTF API access
 - ZEROSECONE_URL: Base URL of the Zerosecone CTF platform (e.g., https://www.aliyunctf.com)
 - ZEROSECONE_TOKEN: Authentication token for API access
 
@@ -91,8 +108,9 @@ https://github.com/vi/websocat
   - check `websocat` availability first (`command -v websocat`)
   - try installing `websocat` automatically when missing
   - if installation fails, ask user to download/install manually from `https://github.com/vi/websocat`
-  - require `websocat` first to bind ws/wss endpoint to a local TCP port
-  - continue interaction through the local bound port only
+  - for GZCTF `api/proxy/<uuid>` endpoints, try direct websocket connection first without adding Cookie auth headers
+  - in that case, bind the ws/wss endpoint to a local TCP port with `websocat` and probe it with normal TCP/HTTP tools such as `curl` or `nc`
+  - continue exploitation through the local bound port once protocol type is identified
 - If detected platform has no mapped script:
   - stop and report unsupported platform
 - If credentials are missing:
@@ -103,6 +121,7 @@ https://github.com/vi/websocat
 ## Completion Checks
 - Platform type is identified by `scripts/detect_platorm.py`
 - For websocket environments, ws/wss endpoint is successfully bound to a local TCP port via `websocat` before exploitation/interaction
+- For GZCTF websocket proxy endpoints, direct no-cookie connection is attempted before adding extra headers
 - Required credentials are explicitly collected from the user
 - Correct script path is selected based on platform type
 - Routed command executes and returns parseable output
@@ -112,6 +131,16 @@ https://github.com/vi/websocat
 Detection:
 ```bash
 python scripts/detect_platorm.py --url <target_url>
+```
+
+GZCTF with env token:
+```bash
+python scripts/gzctf.py list
+```
+
+GZCTF with explicit credentials:
+```bash
+python scripts/gzctf.py <action> [args]
 ```
 
 Zerosecone with env token:
@@ -128,9 +157,14 @@ Websocket environment port binding (required before interaction):
 ```bash
 command -v websocat || <install-websocat-by-os>
 
-websocat -b tcp-l:127.0.0.1:<local_port> ws://<target_ws_endpoint>
+websocat tcp-l:127.0.0.1:<local_port> ws://<target_ws_endpoint>
 # or
-websocat -b tcp-l:127.0.0.1:<local_port> wss://<target_ws_endpoint>
+websocat -k tcp-l:127.0.0.1:<local_port> wss://<target_ws_endpoint>
+```
+
+Direct GZCTF websocket proxy probe without Cookie:
+```bash
+printf 'help\n' | websocat -v -k -t -E 'wss://<domain>/api/proxy/<instance_uuid>'
 ```
 
 If installation fails, ask user to install manually from `https://github.com/vi/websocat` and rerun the binding command.
