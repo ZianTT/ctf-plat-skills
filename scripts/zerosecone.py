@@ -32,8 +32,8 @@ class Zerosecone(CTFPlatform):
             "id": data.json()['data']['id'],
             "title": data.json()['data']['title'],
             "status": data.json()['data']['status'],
-            "game_start_at": data.json()['data']['game_start_at'],
-            "game_end_at": data.json()['data']['game_end_at'],
+            "start": data.json()['data']['game_start_at'],
+            "end": data.json()['data']['game_end_at'],
         }
         return metadata
 
@@ -122,6 +122,8 @@ def main():
     parser = build_parser()
     args = parser.parse_args()
 
+    if not args.url:
+        parser.error("Missing URL. Pass --url or set ZEROSECONE_URL.")
     if not args.token:
         parser.error("Missing token. Pass --token or set ZEROSECONE_TOKEN.")
 
