@@ -57,6 +57,58 @@ class Adworld(CTFPlatform):
             return {}
         return challenge.json()['data']
     
+    def download_challenge_attachment(self, challenge_id):
+        challenge = self.fetch_challenge(challenge_id)
+        if challenge == {}:
+            print("💥 Challenge not found, cannot download attachment")
+            return None
+        if challenge["attachment"] == {}:
+            print("💥 No attachment for this challenge")
+            return None
+        filename = challenge['attachment']['name']
+        url = "https://adworld.xctf.org.cn" + challenge['attachment']['url']
+        if not os.path.exists(f"attachments/{self.metadata['title']}/{challenge['name']}"):
+            os.makedirs(f"attachments/{self.metadata['title']}/{challenge['name']}")
+        filepath = f"attachments/{self.metadata['title']}/{challenge['name']}/{filename}"
+        attachment = self.session.get(url)
+        with open(filepath, "wb") as f:
+            f.write(attachment.content)
+        print(f"✅ Downloaded attachment to {filepath}")
+        return filepath
+
+    def start_instance(self, challenge_id):
+        challenge = self.fetch_challenge(challenge_id)
+        reference_type = challenge['scene_config']['reference_type']
+        instance = self.session.post(f"{self.url}/scenes/", json={"checkpoint_id": challenge_id})
+        if instance.status_code != 201:
+            print(f"💥 Failed to start instance for challenge {challenge_id}: {instance.status_code} {instance.text}")
+            return {}
+        data = instance.json()
+        if data["code"] != "AD-000000":
+            print(f"💥 Failed to start instance for challenge {challenge_id}: {data['message']}")
+            return {}
+        for i in range(10):
+            instance_status = self.session.get(f"{self.url}/scenes/dynamic/{challenge_id}/?reference={reference_type}")
+            if instance_status.status_code != 200:
+                print(f"💥 Failed to get instance status for challenge {challenge_id}: {instance_status.status_code} {instance_status.text}")
+                return {}
+            instance_status = instance_status.json()
+            if instance_status["data"]["scene_status"] == 1:
+                print(f"✅ Instance is running")
+                return instance_status['data']
+            time.sleep(1)
+        return data['data']
+    
+    def submit_flag(self, challenge_id, flag):
+        submission = self.session.post(f"{self.url}/flag/", json={"flag": flag, "checkpoint_id": challenge_id})
+        if submission.status_code != 200:
+            print(f"💥 Failed to submit flag for challenge {challenge_id}: {submission.status_code} {submission.text}")
+            return {}
+        if submission.json()['code'] != "AD-000000":
+            print(f"💥 Failed to submit flag for challenge {challenge_id}: {submission.json()['message']}")
+            return {}
+        return submission.json()['data']
+
 def build_parser():
     parser = argparse.ArgumentParser(description="Adworld API CLI")
     parser.add_argument("--url", "-u", default=os.getenv("ADWORLD_URL"), help="Base URL of the target Adworld CTF platform (can also be set via ADWORLD_URL env variable)")
